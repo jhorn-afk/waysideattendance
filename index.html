@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.4</title>
+<title>Pathways — Attendance Log v2.4.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4.1</span>
     </div>
   </div>
 </div>
@@ -691,7 +691,7 @@ function renderP(){
       // FULLY LOCKED — green
       card.classList.add('fully-locked');
       card.innerHTML=`
-        <div><div class="nm">${p.name}</div><div class="mt">${p.home} · <span class="aai">AAI: ${p.aai||'—'}</span></div></div>
+        <div><div class="nm">${p.name}</div><div class="mt">${p.home} · <span class="aai">AAI: ${p.aai||'—'}</span>${s.driver?` · <span style="color:var(--accent);font-weight:600">Driver: ${s.driver}</span>`:''}</div></div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:.78rem;color:var(--mut)">${f12(s.timeIn)} → ${f12(s.timeOut)}</span>
           <span class="status-label status-locked">✓ Locked</span>
@@ -701,7 +701,7 @@ function renderP(){
       // SIGNED IN — orange, waiting for out time
       card.classList.add('signed-in');
       card.innerHTML=`
-        <div><div class="nm">${p.name}</div><div class="mt">${p.home} · <span class="aai">AAI: ${p.aai||'—'}</span></div></div>
+        <div><div class="nm">${p.name}</div><div class="mt">${p.home} · <span class="aai">AAI: ${p.aai||'—'}</span>${s.driver?` · <span style="color:var(--accent);font-weight:600">Driver: ${s.driver}</span>`:''}</div></div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:.78rem;color:var(--mut)">In: ${f12(s.timeIn)}</span>
           <span class="status-label status-signed-in">⏱ Signed In</span>
