@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.3.3</title>
+<title>Pathways — Attendance Log v2.4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.3</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4</span>
     </div>
   </div>
 </div>
@@ -729,9 +729,10 @@ function renderP(){
 
 function signInParticipant(idx){
   const pt=pTimes[curLoc];
-  if(!pt[idx])pt[idx]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false};
+  if(!pt[idx])pt[idx]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false,driver:''};
   if(!pt[idx].timeIn)pt[idx].timeIn=nowTime();
   pt[idx].signedIn=true;
+  pt[idx].driver=$('driverName').value||'';
   scheduleSave();buildHTabs();renderP();buildQGESelect();
   toast('Signed in: '+curP()[idx].name.split(' ')[0]);
 }
@@ -925,17 +926,18 @@ function qgeLogTimes(){
   if(!tIn&&!tOut){toast('Enter at least one time');return}
   if(!qgeSel.size){toast('No participants selected');return}
   const pt=pTimes[curLoc];
+  const driverName=$('driverName').value||'';
   qgeSel.forEach(idx=>{
-    if(!pt[idx])pt[idx]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false};
+    if(!pt[idx])pt[idx]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false,driver:''};
     if(tIn&&!pt[idx].signedIn){
       // Only set time in if not already signed in
-      pt[idx].timeIn=tIn;pt[idx].signedIn=true;
+      pt[idx].timeIn=tIn;pt[idx].signedIn=true;pt[idx].driver=driverName;
     }
     if(tOut){
       pt[idx].timeOut=tOut;pt[idx].fullyLocked=true;
       // If they weren't signed in yet but we're adding out time, sign them in too
-      if(!pt[idx].signedIn&&tIn){pt[idx].timeIn=tIn;pt[idx].signedIn=true}
-      else if(!pt[idx].signedIn&&!tIn){pt[idx].timeIn=nowTime();pt[idx].signedIn=true}
+      if(!pt[idx].signedIn&&tIn){pt[idx].timeIn=tIn;pt[idx].signedIn=true;pt[idx].driver=driverName}
+      else if(!pt[idx].signedIn&&!tIn){pt[idx].timeIn=nowTime();pt[idx].signedIn=true;pt[idx].driver=driverName}
     }
   });
   const count=qgeSel.size;
@@ -982,7 +984,7 @@ async function rmHome(h){const count=individuals[curLoc].filter(p=>p.home===h).l
 // ================================================================
 function getPayload(){
   const pp=curP();const pt=pTimes[curLoc]||{};
-  const filledP=pp.map((p,i)=>({...p,idx:i})).filter(p=>pt[p.idx]&&(pt[p.idx].timeIn||pt[p.idx].timeOut)).map(p=>({name:p.name,home:p.home,aai:p.aai,timeIn:pt[p.idx].timeIn,timeOut:pt[p.idx].timeOut}));
+  const filledP=pp.map((p,i)=>({...p,idx:i})).filter(p=>pt[p.idx]&&(pt[p.idx].timeIn||pt[p.idx].timeOut)).map(p=>({name:p.name,home:p.home,aai:p.aai,timeIn:pt[p.idx].timeIn,timeOut:pt[p.idx].timeOut,driver:pt[p.idx].driver||''}));
   const filledS=(sRows[curLoc]||[]).filter(r=>r.name||r.timeIn).map(r=>({name:r.name,lastName:'',home:r.home,timeIn:r.timeIn,timeOut:r.timeOut}));
   return{date:$('logDate').value,driver:$('driverName').value,location:curLoc,locationName:locName(),participants:filledP,staff:filledS,savedAt:new Date().toISOString()};
 }
@@ -1046,8 +1048,8 @@ async function viewLog(k){
   $('vT').textContent=`${d.locationName} — ${fD(d.date)}`;
   $('vS').textContent=`Driver: ${d.driver||'—'} · Saved: ${new Date(d.savedAt).toLocaleString()}`;
   let html='<h3 style="font-size:.83rem;margin:0 0 5px;color:var(--accent)">Participants</h3>';
-  html+='<table class="dt"><thead><tr><th>Name</th><th>Home</th><th>AAI</th><th>In</th><th>Out</th></tr></thead><tbody>';
-  (d.participants||[]).forEach(p=>{html+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td></tr>`});
+  html+='<table class="dt"><thead><tr><th>Name</th><th>Home</th><th>AAI</th><th>In</th><th>Out</th><th>Driver</th></tr></thead><tbody>';
+  (d.participants||[]).forEach(p=>{html+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${p.driver||d.driver||'—'}</td></tr>`});
   html+='</tbody></table>';
   html+='<h3 style="font-size:.83rem;margin:8px 0 5px;color:var(--gold)">Staff</h3>';
   html+='<table class="dt stbl"><thead><tr><th>Name</th><th>House</th><th>In</th><th>Out</th></tr></thead><tbody>';
@@ -1065,7 +1067,7 @@ function buildReportHTML(d){
   const generated=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' at '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 
   let pTables='';
-  pHomes.forEach(home=>{pTables+=`<div class="home-hdr">${home}</div><table class="rt"><thead><tr><th style="width:32%">Participant Name</th><th>Home</th><th>AAI</th><th>Time In</th><th>Time Out</th></tr></thead><tbody>`;pByHome[home].forEach(p=>{pTables+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai||'—'}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td></tr>`});pTables+='</tbody></table>'});
+  pHomes.forEach(home=>{pTables+=`<div class="home-hdr">${home}</div><table class="rt"><thead><tr><th style="width:28%">Participant Name</th><th>Home</th><th>AAI</th><th>Time In</th><th>Time Out</th><th>Driver</th></tr></thead><tbody>`;pByHome[home].forEach(p=>{pTables+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai||'—'}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${p.driver||'—'}</td></tr>`});pTables+='</tbody></table>'});
 
   let sTables='';
   sHomes.forEach(home=>{sTables+=`<div class="home-hdr">${home}</div><table class="rt staff"><thead><tr><th style="width:35%">Staff Name</th><th>Assigned House</th><th>Time In</th><th>Time Out</th></tr></thead><tbody>`;sByHome[home].forEach(s=>{sTables+=`<tr><td>${s.name} ${s.lastName||''}</td><td>${s.home||'—'}</td><td>${f12(s.timeIn)}</td><td>${f12(s.timeOut)}</td></tr>`});sTables+='</tbody></table>'});
@@ -1138,14 +1140,14 @@ function reportViewed(){if(vKey)openReport(vKey)}
 // ================================================================
 function mkCSV(d){
   let c=`${d.locationName} — ${fD(d.date)}\n\nPARTICIPANTS\nName,Home,AAI,Time In,Time Out,Driver\n`;
-  (d.participants||[]).forEach(p=>{c+=`"${p.name}","${p.home}","${p.aai}","${f12(p.timeIn)}","${f12(p.timeOut)}","${d.driver||''}"\n`});
+  (d.participants||[]).forEach(p=>{c+=`"${p.name}","${p.home}","${p.aai}","${f12(p.timeIn)}","${f12(p.timeOut)}","${p.driver||d.driver||''}"\n`});
   c+=`\nSTAFF ATTENDANCE\nName,House,Time In,Time Out\n`;
   (d.staff||[]).forEach(s=>{c+=`"${s.name} ${s.lastName||''}","${s.home||''}","${f12(s.timeIn)}","${f12(s.timeOut)}"\n`});
   return c;
 }
 
 async function dlCSV(k){const d=await dbGet('logs',k);if(!d)return;dlFile(mkCSV(d),`pathways_${d.location}_${d.date}.csv`,'text/csv');toast('CSV downloaded')}
-async function exportAllCSV(){const all=await dbAll('logs');const filt=all.filter(i=>i.value.location===curLoc);if(!filt.length){toast('No logs for this location');return}let c='Date,Location,Type,Name,Home,AAI,Time In,Time Out,Driver\n';filt.forEach(i=>{const d=i.value;(d.participants||[]).forEach(p=>{c+=`"${d.date}","${d.locationName}","Participant","${p.name}","${p.home}","${p.aai}","${f12(p.timeIn)}","${f12(p.timeOut)}","${d.driver||''}"\n`});(d.staff||[]).forEach(s=>{c+=`"${d.date}","${d.locationName}","Staff","${s.name} ${s.lastName||''}","${s.home||''}","","${f12(s.timeIn)}","${f12(s.timeOut)}",""\n`})});dlFile(c,`pathways_${curLoc}_all.csv`,'text/csv');toast('Exported')}
+async function exportAllCSV(){const all=await dbAll('logs');const filt=all.filter(i=>i.value.location===curLoc);if(!filt.length){toast('No logs for this location');return}let c='Date,Location,Type,Name,Home,AAI,Time In,Time Out,Driver\n';filt.forEach(i=>{const d=i.value;(d.participants||[]).forEach(p=>{c+=`"${d.date}","${d.locationName}","Participant","${p.name}","${p.home}","${p.aai}","${f12(p.timeIn)}","${f12(p.timeOut)}","${p.driver||d.driver||''}"\n`});(d.staff||[]).forEach(s=>{c+=`"${d.date}","${d.locationName}","Staff","${s.name} ${s.lastName||''}","${s.home||''}","","${f12(s.timeIn)}","${f12(s.timeOut)}",""\n`})});dlFile(c,`pathways_${curLoc}_all.csv`,'text/csv');toast('Exported')}
 function cpViewCSV(){if(!vKey)return;dbGet('logs',vKey).then(d=>{if(!d)return;navigator.clipboard.writeText(mkCSV(d)).then(()=>toast('CSV copied!'))})}
 
 // ================================================================
@@ -1154,7 +1156,7 @@ function cpViewCSV(){if(!vKey)return;dbGet('logs',vKey).then(d=>{if(!d)return;na
 function showSum(){
   const d=getPayload();
   $('sumSub').textContent=`${d.locationName} · Driver: ${d.driver||'—'} · ${fD(d.date)} · ${d.participants.length} participants · ${d.staff.length} staff`;
-  const pb=$('sumPB');pb.innerHTML='';d.participants.forEach(p=>{pb.innerHTML+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${d.driver||'—'}</td></tr>`});
+  const pb=$('sumPB');pb.innerHTML='';d.participants.forEach(p=>{pb.innerHTML+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${p.driver||d.driver||'—'}</td></tr>`});
   const sb=$('sumSB');sb.innerHTML='';d.staff.forEach(s=>{sb.innerHTML+=`<tr><td>${s.name} ${s.lastName||''}</td><td>${s.home||'—'}</td><td>${f12(s.timeIn)}</td><td>${f12(s.timeOut)}</td></tr>`});
   $('sumOv').classList.add('show');
 }
