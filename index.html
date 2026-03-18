@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.1</title>
+<title>Pathways — Attendance Log v2.2</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.2</span>
     </div>
   </div>
 </div>
@@ -521,13 +521,48 @@ function rebuildAll(){buildHomeFilter();buildHTabs();renderP();renderS();buildQG
 // ================================================================
 let svTimer=null;
 let suppressRemote=false;
-function scheduleSave(){clearTimeout(svTimer);svTimer=setTimeout(async()=>{suppressRemote=true;const state={_driver:$('driverName').value,_date:$('logDate').value};LOCS.forEach(l=>{state[l.id]={pTimes:pTimes[l.id]||{},sRows:sRows[l.id]||[],sIdC:sIdC[l.id]||1}});await dbPut('state','current',state);$('autoSave').textContent='☁ Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});setTimeout(()=>{suppressRemote=false},1000)},800)}
+function scheduleSave(){clearTimeout(svTimer);svTimer=setTimeout(async()=>{suppressRemote=true;
+  const dt=$('logDate').value;
+  const state={_driver:$('driverName').value,_date:dt};
+  LOCS.forEach(l=>{state[l.id]={pTimes:pTimes[l.id]||{},sRows:sRows[l.id]||[],sIdC:sIdC[l.id]||1}});
+  // Save under date-specific key AND current pointer
+  await dbPut('state','current',{_date:dt});
+  await dbPut('state','day_'+dt,state);
+  $('autoSave').textContent='☁ Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  setTimeout(()=>{suppressRemote=false},1000)},800)}
 
-async function restoreState(){const s=await dbGet('state','current');if(!s)return;if(s._driver)$('driverName').value=s._driver;if(s._date)$('logDate').value=s._date;LOCS.forEach(l=>{if(s[l.id]){pTimes[l.id]=s[l.id].pTimes||{};sRows[l.id]=s[l.id].sRows||[];sIdC[l.id]=s[l.id].sIdC||1;
-// Migrate old format: convert locked → signedIn/fullyLocked
-Object.keys(pTimes[l.id]||{}).forEach(k=>{const pt=pTimes[l.id][k];if(pt.signedIn===undefined){pt.signedIn=!!(pt.timeIn);pt.fullyLocked=!!(pt.locked);delete pt.locked}});
-(sRows[l.id]||[]).forEach(r=>{if(r.signedIn===undefined){r.signedIn=!!(r.timeIn);r.fullyLocked=!!(r.locked);delete r.locked;if(r.lastName){r.name=(r.name+' '+(r.lastName||'')).trim();delete r.lastName}}})}})}
+async function restoreState(){
+  // Try to load the last active date
+  const cur=await dbGet('state','current');
+  const dt=(cur&&cur._date)||$('logDate').value;
+  $('logDate').value=dt;$('sDate').value=dt;
+  await loadDateState(dt);
+}
 
+async function loadDateState(dt){
+  // Try date-specific key first
+  let s=await dbGet('state','day_'+dt);
+  // Migration: if no date-specific state, check old 'current' format
+  if(!s){const old=await dbGet('state','current');if(old&&old._driver!==undefined&&old._date===dt)s=old}
+  if(!s){
+    // Fresh day — clear all working data
+    $('driverName').value='';
+    LOCS.forEach(l=>{
+      pTimes[l.id]={};
+      individuals[l.id].forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
+      sRows[l.id]=[];sIdC[l.id]=1;
+    });
+    return;
+  }
+  if(s._driver)$('driverName').value=s._driver;
+  LOCS.forEach(l=>{if(s[l.id]){pTimes[l.id]=s[l.id].pTimes||{};sRows[l.id]=s[l.id].sRows||[];sIdC[l.id]=s[l.id].sIdC||1;
+  // Migrate old format
+  Object.keys(pTimes[l.id]||{}).forEach(k=>{const pt=pTimes[l.id][k];if(pt.signedIn===undefined){pt.signedIn=!!(pt.timeIn);pt.fullyLocked=!!(pt.locked);delete pt.locked}});
+  (sRows[l.id]||[]).forEach(r=>{if(r.signedIn===undefined){r.signedIn=!!(r.timeIn);r.fullyLocked=!!(r.locked);delete r.locked;if(r.lastName){r.name=(r.name+' '+(r.lastName||'')).trim();delete r.lastName}}})}else{
+    pTimes[l.id]={};individuals[l.id].forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
+    sRows[l.id]=[];sIdC[l.id]=1;
+  }});
+}
 // ================================================================
 // INDIVIDUALS PERSISTENCE
 // ================================================================
@@ -544,19 +579,20 @@ async function saveSetting(obj){const cur=(await dbGet('settings','admin'))||{};
 // ================================================================
 // REAL-TIME SYNC
 // ================================================================
+let activeSyncUnsub=null;
 function startRealtimeSync(){
-  // Sync state across devices
+  // Sync the date pointer
   db.collection('state').doc('current').onSnapshot(doc=>{
     if(suppressRemote)return;
     if(!doc.exists)return;
     const s=doc.data();
-    if(s._driver&&document.activeElement!==$('driverName'))$('driverName').value=s._driver;
-    if(s._date&&document.activeElement!==$('logDate')){$('logDate').value=s._date;$('sDate').value=s._date}
-    LOCS.forEach(l=>{if(s[l.id]){pTimes[l.id]=s[l.id].pTimes||{};sRows[l.id]=s[l.id].sRows||[];sIdC[l.id]=s[l.id].sIdC||1}});
-    const ae=document.activeElement;
-    const isEditingTime=ae&&ae.classList&&ae.classList.contains('ti');
-    if(!isEditingTime){buildHTabs();renderP();renderS()}
+    if(s._date&&s._date!==$('logDate').value&&document.activeElement!==$('logDate')){
+      $('logDate').value=s._date;$('sDate').value=s._date;
+      syncToDate(s._date);
+    }
   });
+  // Start syncing the current date's data
+  syncToDate($('logDate').value);
   // Sync individuals list across devices
   LOCS.forEach(l=>{
     db.collection('individuals').doc(l.id).onSnapshot(doc=>{
@@ -568,6 +604,19 @@ function startRealtimeSync(){
         if(l.id===curLoc){buildHomeFilter();buildHTabs();renderP();buildQGESelect();if(isAdminOpen())renderManage()}
       }
     });
+  });
+}
+function syncToDate(dt){
+  if(activeSyncUnsub)activeSyncUnsub();
+  activeSyncUnsub=db.collection('state').doc('day_'+dt).onSnapshot(doc=>{
+    if(suppressRemote)return;
+    if(!doc.exists)return;
+    const s=doc.data();
+    if(s._driver&&document.activeElement!==$('driverName'))$('driverName').value=s._driver;
+    LOCS.forEach(l=>{if(s[l.id]){pTimes[l.id]=s[l.id].pTimes||{};sRows[l.id]=s[l.id].sRows||[];sIdC[l.id]=s[l.id].sIdC||1}});
+    const ae=document.activeElement;
+    const isEditingTime=ae&&ae.classList&&ae.classList.contains('ti');
+    if(!isEditingTime){buildHTabs();renderP();renderS()}
   });
 }
 
@@ -1095,7 +1144,19 @@ function clearToday(){
 $('logDate').valueAsDate=new Date();
 $('sDate').valueAsDate=new Date();
 $('driverName').addEventListener('input',scheduleSave);
-$('logDate').addEventListener('change',e=>{$('sDate').value=e.target.value;scheduleSave()});
+$('logDate').addEventListener('change',async e=>{
+  const newDate=e.target.value;
+  $('sDate').value=newDate;
+  // Save pointer to new date
+  await dbPut('state','current',{_date:newDate});
+  // Switch Firebase listener to new date
+  if(typeof syncToDate==='function')syncToDate(newDate);
+  // Load that date's data (or start fresh)
+  await loadDateState(newDate);
+  qgeSel.clear();
+  rebuildAll();
+  toast('Switched to '+fD(newDate));
+});
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 $('admEmail').addEventListener('change',e=>saveSetting({email:e.target.value}));
 
