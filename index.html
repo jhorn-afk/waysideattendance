@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.3.2</title>
+<title>Pathways — Attendance Log v2.3.3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.2</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.3</span>
     </div>
   </div>
 </div>
@@ -608,10 +608,13 @@ async function saveSetting(obj){const cur=(await dbGet('settings','admin'))||{};
 // REAL-TIME SYNC
 // ================================================================
 let activeSyncUnsub=null;
+let syncReady=false;
 function startRealtimeSync(){
+  // Delay sync readiness to avoid initial snapshot overwriting clean boot state
+  setTimeout(()=>{syncReady=true},3000);
   // Sync the date pointer
   db.collection('state').doc('current').onSnapshot(doc=>{
-    if(suppressRemote)return;
+    if(suppressRemote||!syncReady)return;
     if(!doc.exists)return;
     const s=doc.data();
     const dt=s._date;
