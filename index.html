@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.6.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.6.2</span>
     </div>
   </div>
 </div>
@@ -1066,12 +1066,16 @@ function buildReportHTML(d){
   const sByHome={};(d.staff||[]).forEach(s=>{const h=s.home||'Unassigned';if(!sByHome[h])sByHome[h]=[];sByHome[h].push(s)});const sHomes=Object.keys(sByHome).sort();
   const generated=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' at '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 
-  let pTables='<table class="rt"><colgroup><col style="width:25%"><col style="width:15%"><col style="width:8%"><col style="width:14%"><col style="width:14%"><col style="width:24%"></colgroup><thead><tr><th>Participant Name</th><th>Home</th><th>AAI</th><th>Time In</th><th>Time Out</th><th>Driver</th></tr></thead><tbody>';
-  pHomes.forEach(home=>{pTables+=`<tr><td colspan="6" style="background:#f0edf3;font-weight:700;font-size:.62rem;text-transform:uppercase;letter-spacing:.7px;color:#5d1b5f;padding:4px 6px;border-bottom:1px solid #d0d0d0">${home}</td></tr>`;pByHome[home].forEach(p=>{pTables+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai||'—'}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${p.driver||'—'}</td></tr>`})});
+  // Sort all participants by home
+  const allP=(d.participants||[]).slice().sort((a,b)=>a.home.localeCompare(b.home)||a.name.localeCompare(b.name));
+  let pTables='<table class="rt"><thead><tr><th>Name</th><th>Home</th><th>AAI</th><th>Time In</th><th>Time Out</th><th>Driver</th></tr></thead><tbody>';
+  allP.forEach(p=>{pTables+=`<tr><td>${p.name}</td><td>${p.home}</td><td>${p.aai||'—'}</td><td>${f12(p.timeIn)}</td><td>${f12(p.timeOut)}</td><td>${p.driver||'—'}</td></tr>`});
   pTables+='</tbody></table>';
 
-  let sTables='<table class="rt staff"><colgroup><col style="width:30%"><col style="width:30%"><col style="width:20%"><col style="width:20%"></colgroup><thead><tr><th>Staff Name</th><th>Assigned House</th><th>Time In</th><th>Time Out</th></tr></thead><tbody>';
-  sHomes.forEach(home=>{sTables+=`<tr><td colspan="4" style="background:#f7f3e8;font-weight:700;font-size:.62rem;text-transform:uppercase;letter-spacing:.7px;color:#b08818;padding:4px 6px;border-bottom:1px solid #d0d0d0">${home}</td></tr>`;sByHome[home].forEach(s=>{sTables+=`<tr><td>${s.name} ${s.lastName||''}</td><td>${s.home||'—'}</td><td>${f12(s.timeIn)}</td><td>${f12(s.timeOut)}</td></tr>`})});
+  // Sort all staff by home
+  const allS=(d.staff||[]).slice().sort((a,b)=>(a.home||'').localeCompare(b.home||''));
+  let sTables='<table class="rt staff"><thead><tr><th>Name</th><th>House</th><th>Time In</th><th>Time Out</th></tr></thead><tbody>';
+  allS.forEach(s=>{sTables+=`<tr><td>${(s.name+' '+(s.lastName||'')).trim()}</td><td>${s.home||'—'}</td><td>${f12(s.timeIn)}</td><td>${f12(s.timeOut)}</td></tr>`});
   sTables+='</tbody></table>';
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
