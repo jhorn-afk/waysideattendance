@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.2.1</title>
+<title>Pathways — Attendance Log v2.3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.2.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3</span>
     </div>
   </div>
 </div>
@@ -249,7 +249,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="fc">
       <div class="fr fr2">
         <div><label>Driver Name</label><input type="text" id="driverName" placeholder="e.g. Angelica Roman" autocomplete="off"></div>
-        <div><label>Date</label><input type="date" id="logDate"></div>
+        <div>
+          <label>Date</label>
+          <input type="date" id="logDate">
+          <div id="liveClock" style="font-size:.78rem;color:var(--accent);font-weight:600;margin-top:3px"></div>
+        </div>
       </div>
     </div>
 
@@ -1181,6 +1185,24 @@ $('logDate').addEventListener('change',async e=>{
 });
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 $('admEmail').addEventListener('change',e=>saveSetting({email:e.target.value}));
+
+// Live clock — updates every second, auto-rolls to new day at midnight
+let lastClockDate='';
+function updateClock(){
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+  const dateStr=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  $('liveClock').textContent=timeStr+' — '+dateStr;
+  // Auto-roll date at midnight if user is still on the previous day
+  const todayISO=now.toISOString().split('T')[0];
+  if(lastClockDate&&todayISO!==lastClockDate&&$('logDate').value===lastClockDate){
+    $('logDate').value=todayISO;
+    $('logDate').dispatchEvent(new Event('change'));
+  }
+  lastClockDate=todayISO;
+}
+updateClock();
+setInterval(updateClock,1000);
 
 (async function(){
   // Show header logo if available
