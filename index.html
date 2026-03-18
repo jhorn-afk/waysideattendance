@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4.2</span>
     </div>
   </div>
 </div>
@@ -1100,7 +1100,6 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
 .rt.staff th{background:#b08818}
 .rt td{padding:5px 10px;border-bottom:1px solid #e8e8e8}.rt tr:nth-child(even){background:#fafaf8}
 .footer{margin-top:28px;padding-top:12px;border-top:2px solid #e0e0e0;display:flex;justify-content:space-between;font-size:.68rem;color:#999}
-.sig{border-top:1px solid #333;width:200px;padding-top:4px;color:#333;font-size:.7rem;font-weight:600;margin-top:30px}
 </style></head><body>
 <div class="toolbar no-print">
   <button class="tb-print" onclick="window.print()">Print / Save as PDF</button>
@@ -1125,7 +1124,7 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
   <div class="sec-hdr">Participant Arrival / Departure Log<span class="cnt">${(d.participants||[]).length} Participants</span></div>
   ${pTables||'<p style="color:#999;padding:10px;font-size:.82rem">No participant data recorded.</p>'}
   ${(d.staff||[]).length?`<div class="sec-hdr staff-sec" style="${pHomes.length>8?'page-break-before:always':''}">Staff Attendance Log<span class="cnt">${d.staff.length} Staff</span></div>${sTables}`:''}
-  <div class="footer"><div><div class="sig">Director Signature / Date</div></div><div style="text-align:right"><div>${d.locationName} · ${fD(d.date)}</div></div></div>
+  <div class="footer"><div></div><div style="text-align:right"><div>${d.locationName} · ${fD(d.date)}</div></div></div>
 </div>
 <script>function emailRpt(){var em=prompt('Enter email address:','');if(!em)return;var s=encodeURIComponent('${d.locationName} Attendance Report — ${fD(d.date)}');var b=encodeURIComponent('Please find the attendance report attached.\\nUse Print > Save as PDF to generate the PDF attachment.');window.open('mailto:'+encodeURIComponent(em)+'?subject='+s+'&body='+b)}<\/script>
 </body></html>`;
