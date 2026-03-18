@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.5.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.5.2</span>
     </div>
   </div>
 </div>
@@ -1102,8 +1102,7 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
 .footer{margin-top:28px;padding-top:12px;border-top:2px solid #e0e0e0;display:flex;justify-content:space-between;font-size:.68rem;color:#999}
 </style></head><body>
 <div class="toolbar no-print">
-  <button class="tb-print" onclick="printReport()">Print</button>
-  <button class="tb-pdf" onclick="savePDF()">Save as PDF</button>
+  <button class="tb-print" onclick="window.print()">Print / Save as PDF</button>
   <button class="tb-close" onclick="window.close()">Close</button>
 </div>
 <div class="report">
