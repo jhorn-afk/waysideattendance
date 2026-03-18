@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.3.1</title>
+<title>Pathways — Attendance Log v2.3.2</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.1</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.2</span>
     </div>
   </div>
 </div>
@@ -614,9 +614,11 @@ function startRealtimeSync(){
     if(suppressRemote)return;
     if(!doc.exists)return;
     const s=doc.data();
-    if(s._date&&s._date!==$('logDate').value&&document.activeElement!==$('logDate')){
-      $('logDate').value=s._date;$('sDate').value=s._date;
-      syncToDate(s._date);
+    const dt=s._date;
+    // Only accept valid YYYY-MM-DD dates
+    if(dt&&/^\d{4}-\d{2}-\d{2}$/.test(dt)&&dt!==$('logDate').value&&document.activeElement!==$('logDate')){
+      $('logDate').value=dt;$('sDate').value=dt;
+      syncToDate(dt);
     }
   });
   // Start syncing the current date's data
@@ -1212,6 +1214,8 @@ setInterval(updateClock,1000);
   if(OLW_LOGO){const lg=$('headerLogo');lg.src=OLW_LOGO;lg.style.display='block'}
   await loadIndividuals();
   await restoreState();
+  // Force-write a clean date to Firebase to fix any bad values
+  await dbPut('state','current',{_date:$('logDate').value});
   buildLocBar();
   switchLoc(curLoc);
   startRealtimeSync();
