@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.5.2</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.6</span>
     </div>
   </div>
 </div>
@@ -1077,29 +1077,29 @@ function buildReportHTML(d){
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
-@media print{@page{margin:.6in .5in;size:letter}.no-print{display:none!important}.report{padding:0}}
-.toolbar{position:sticky;top:0;background:#2d0e2e;padding:12px 20px;display:flex;gap:10px;justify-content:center;z-index:10}
-.toolbar button{padding:9px 20px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer}
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;font-size:11px}
+@media print{@page{margin:.4in .4in;size:letter}.no-print{display:none!important}.report{padding:0}}
+.toolbar{position:sticky;top:0;background:#2d0e2e;padding:10px 20px;display:flex;gap:10px;justify-content:center;z-index:10}
+.toolbar button{padding:8px 18px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer}
 .tb-print{background:#5d1b5f;color:#fff}.tb-pdf{background:#b08818;color:#fff}.tb-close{background:#eee;color:#333}
-.report{max-width:850px;margin:0 auto;padding:30px 40px}
-.banner{background:linear-gradient(135deg,#5d1b5f,#7a2480);color:#fff;padding:14px 20px;border-radius:8px;margin-bottom:20px}
-.banner .org{font-family:'Playfair Display',serif;font-size:1.05rem}
-.banner .org-sub{font-size:.73rem;opacity:.85;margin-top:2px}
-.rpt-hdr{border-bottom:3px solid #5d1b5f;padding-bottom:16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start}
-.rpt-hdr .left h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:#5d1b5f;margin-bottom:2px}
-.rpt-hdr .left h2{font-size:.9rem;font-weight:600;color:#333}
-.rpt-hdr .right{text-align:right;font-size:.76rem;color:#666;line-height:1.7}
-.rpt-hdr .right .lbl{font-weight:700;color:#333;text-transform:uppercase;font-size:.66rem;letter-spacing:.5px}
-.sec-hdr{background:#f5f2f8;border-left:4px solid #5d1b5f;padding:10px 14px;margin:20px 0 8px;font-weight:700;font-size:.86rem;color:#5d1b5f;display:flex;justify-content:space-between;align-items:center}
+.report{max-width:850px;margin:0 auto;padding:16px 30px}
+.banner{background:linear-gradient(135deg,#5d1b5f,#7a2480);color:#fff;padding:8px 14px;border-radius:6px;margin-bottom:10px}
+.banner .org{font-family:'Playfair Display',serif;font-size:.85rem}
+.banner .org-sub{font-size:.62rem;opacity:.85;margin-top:1px}
+.rpt-hdr{border-bottom:2px solid #5d1b5f;padding-bottom:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start}
+.rpt-hdr .left h1{font-family:'Playfair Display',serif;font-size:1.1rem;color:#5d1b5f;margin-bottom:1px}
+.rpt-hdr .left h2{font-size:.72rem;font-weight:600;color:#333}
+.rpt-hdr .right{text-align:right;font-size:.68rem;color:#666;line-height:1.5}
+.rpt-hdr .right .lbl{font-weight:700;color:#333;text-transform:uppercase;font-size:.58rem;letter-spacing:.5px}
+.sec-hdr{background:#f5f2f8;border-left:3px solid #5d1b5f;padding:5px 10px;margin:10px 0 4px;font-weight:700;font-size:.72rem;color:#5d1b5f;display:flex;justify-content:space-between;align-items:center}
 .sec-hdr.staff-sec{border-left-color:#b08818;color:#b08818;background:#faf5e4}
-.sec-hdr .cnt{font-size:.7rem;font-weight:600;background:#fff;padding:3px 10px;border-radius:12px}
-.home-hdr{font-size:.76rem;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.8px;padding:8px 0 4px;margin-top:10px;border-bottom:1px solid #e0e0e0}
-.rt{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:4px}
-.rt th{background:#5d1b5f;color:#fff;padding:6px 10px;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.4px}
+.sec-hdr .cnt{font-size:.6rem;font-weight:600;background:#fff;padding:2px 7px;border-radius:10px}
+.home-hdr{font-size:.64rem;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.7px;padding:4px 0 2px;margin-top:6px;border-bottom:1px solid #e0e0e0}
+.rt{width:100%;border-collapse:collapse;font-size:.68rem;margin-bottom:2px}
+.rt th{background:#5d1b5f;color:#fff;padding:3px 6px;text-align:left;font-weight:600;font-size:.6rem;text-transform:uppercase;letter-spacing:.3px}
 .rt.staff th{background:#b08818}
-.rt td{padding:5px 10px;border-bottom:1px solid #e8e8e8}.rt tr:nth-child(even){background:#fafaf8}
-.footer{margin-top:28px;padding-top:12px;border-top:2px solid #e0e0e0;display:flex;justify-content:space-between;font-size:.68rem;color:#999}
+.rt td{padding:2px 6px;border-bottom:1px solid #e8e8e8}.rt tr:nth-child(even){background:#fafaf8}
+.footer{margin-top:14px;padding-top:8px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:.58rem;color:#999}
 </style></head><body>
 <div class="toolbar no-print">
   <button class="tb-print" onclick="window.print()">Print / Save as PDF</button>
@@ -1107,7 +1107,7 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
 </div>
 <div class="report">
   <div class="banner">
-    ${OLW_LOGO?`<div style="display:flex;align-items:center;gap:14px"><img src="${OLW_LOGO}" alt="Our Lady of the Wayside" style="height:66px;border-radius:6px;background:#fff;padding:4px 6px"><div>`:'<div>'}
+    ${OLW_LOGO?`<div style="display:flex;align-items:center;gap:10px"><img src="${OLW_LOGO}" alt="Our Lady of the Wayside" style="height:44px;border-radius:4px;background:#fff;padding:3px 4px"><div>`:'<div>'}
       <div class="org">Our Lady of the Wayside — Home to Opportunity</div>
       <div class="org-sub">Pathways Day Program — Arrival / Departure Log</div>
     ${OLW_LOGO?'</div></div>':'</div>'}
