@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.5</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.5.1</span>
     </div>
   </div>
 </div>
@@ -1081,7 +1081,7 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
 @media print{@page{margin:.6in .5in;size:letter}.no-print{display:none!important}.report{padding:0}}
 .toolbar{position:sticky;top:0;background:#2d0e2e;padding:12px 20px;display:flex;gap:10px;justify-content:center;z-index:10}
 .toolbar button{padding:9px 20px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer}
-.tb-print{background:#5d1b5f;color:#fff}.tb-email{background:#b08818;color:#fff}.tb-close{background:#eee;color:#333}
+.tb-print{background:#5d1b5f;color:#fff}.tb-pdf{background:#b08818;color:#fff}.tb-close{background:#eee;color:#333}
 .report{max-width:850px;margin:0 auto;padding:30px 40px}
 .banner{background:linear-gradient(135deg,#5d1b5f,#7a2480);color:#fff;padding:14px 20px;border-radius:8px;margin-bottom:20px}
 .banner .org{font-family:'Playfair Display',serif;font-size:1.05rem}
@@ -1102,8 +1102,8 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
 .footer{margin-top:28px;padding-top:12px;border-top:2px solid #e0e0e0;display:flex;justify-content:space-between;font-size:.68rem;color:#999}
 </style></head><body>
 <div class="toolbar no-print">
-  <button class="tb-print" onclick="window.print()">Print / Save as PDF</button>
-  <button class="tb-email" onclick="emailRpt()">Email Report</button>
+  <button class="tb-print" onclick="printReport()">Print</button>
+  <button class="tb-pdf" onclick="savePDF()">Save as PDF</button>
   <button class="tb-close" onclick="window.close()">Close</button>
 </div>
 <div class="report">
@@ -1124,37 +1124,17 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
   ${(d.staff||[]).length?`<div class="sec-hdr staff-sec" style="${pHomes.length>8?'page-break-before:always':''}">Staff Attendance Log<span class="cnt">${d.staff.length} Staff</span></div>${sTables}`:''}
   <div class="footer"><div></div><div style="text-align:right"><div>${d.locationName} · ${fD(d.date)}</div></div></div>
 </div>
-<script>function emailRpt(){
-  var em=prompt('Enter email address:','');
-  if(!em)return;
-  var s='${d.locationName} Attendance Report — ${fD(d.date)}';
-  var b='${d.locationName}\\nDaily Attendance Report\\nDate: ${fD(d.date)}\\n\\n';
-  b+='PARTICIPANTS\\n';
-  b+='${ (function(){
-    var lines=[];
-    pHomes.forEach(function(home){
-      lines.push('\\n--- '+home+' ---');
-      pByHome[home].forEach(function(p){
-        lines.push(p.name+' | AAI: '+(p.aai||'—')+' | In: '+(p.timeIn?f12(p.timeIn):'—')+' | Out: '+(p.timeOut?f12(p.timeOut):'—')+' | Driver: '+(p.driver||'—'));
-      });
-    });
-    return lines.join('\\n');
-  })() }';
-  ${ (d.staff||[]).length ? `
-  b+='\\n\\nSTAFF ATTENDANCE\\n';
-  b+='${ (function(){
-    var lines=[];
-    sHomes.forEach(function(home){
-      lines.push('\\n--- '+home+' ---');
-      sByHome[home].forEach(function(s){
-        lines.push((s.name+' '+(s.lastName||'')).trim()+' | House: '+(s.home||'—')+' | In: '+(s.timeIn?f12(s.timeIn):'—')+' | Out: '+(s.timeOut?f12(s.timeOut):'—'));
-      });
-    });
-    return lines.join('\\n');
-  })() }';` : '' }
-  b+='\\n\\n--- End of Report ---';
-  window.location.href='mailto:'+encodeURIComponent(em)+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(b);
-}<\/script>
+<script>
+function printReport(){window.print()}
+function savePDF(){
+  // Use browser's print dialog with Save as PDF option
+  // Set a hint for the filename
+  var origTitle=document.title;
+  document.title='${d.locationName} - Attendance Report - ${d.date}';
+  window.print();
+  setTimeout(function(){document.title=origTitle},1000);
+}
+<\/script>
 </body></html>`;
 }
 
