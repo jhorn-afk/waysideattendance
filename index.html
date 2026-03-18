@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.3</title>
+<title>Pathways — Attendance Log v2.3.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.3.1</span>
     </div>
   </div>
 </div>
@@ -538,7 +538,9 @@ function scheduleSave(){clearTimeout(svTimer);svTimer=setTimeout(async()=>{suppr
 async function restoreState(){
   // Try to load the last active date
   const cur=await dbGet('state','current');
-  const dt=(cur&&cur._date)||$('logDate').value;
+  let dt=(cur&&cur._date)||'';
+  // Validate date format (YYYY-MM-DD) — if bad, use today
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dt))dt=todayISO();
   $('logDate').value=dt;$('sDate').value=dt;
   await loadDateState(dt);
 }
@@ -1160,15 +1162,16 @@ function cpCSV(){navigator.clipboard.writeText(mkCSV(getPayload())).then(()=>toa
 function clearToday(){
   if(!confirm("Clear all today's data for this location? Saved logs are NOT affected."))return;
   curP().forEach((_,i)=>{pTimes[curLoc][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
-  sRows[curLoc]=[];sIdC[curLoc]=1;$('driverName').value='';$('logDate').valueAsDate=new Date();
+  sRows[curLoc]=[];sIdC[curLoc]=1;$('driverName').value='';$('logDate').value=todayISO();
   qgeSel.clear();scheduleSave();rebuildAll();toast('Cleared');
 }
 
 // ================================================================
 // BOOT
 // ================================================================
-$('logDate').valueAsDate=new Date();
-$('sDate').valueAsDate=new Date();
+function todayISO(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+$('logDate').value=todayISO();
+$('sDate').value=todayISO();
 $('driverName').addEventListener('input',scheduleSave);
 $('logDate').addEventListener('change',async e=>{
   const newDate=e.target.value;
@@ -1194,12 +1197,12 @@ function updateClock(){
   const dateStr=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   $('liveClock').textContent=timeStr+' — '+dateStr;
   // Auto-roll date at midnight if user is still on the previous day
-  const todayISO=now.toISOString().split('T')[0];
-  if(lastClockDate&&todayISO!==lastClockDate&&$('logDate').value===lastClockDate){
-    $('logDate').value=todayISO;
+  const today=todayISO();
+  if(lastClockDate&&today!==lastClockDate&&$('logDate').value===lastClockDate){
+    $('logDate').value=today;
     $('logDate').dispatchEvent(new Event('change'));
   }
-  lastClockDate=todayISO;
+  lastClockDate=today;
 }
 updateClock();
 setInterval(updateClock,1000);
