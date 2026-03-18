@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pathways — Attendance Log v2.2</title>
+<title>Pathways — Attendance Log v2.2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.2</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.2.1</span>
     </div>
   </div>
 </div>
@@ -542,26 +542,48 @@ async function restoreState(){
 async function loadDateState(dt){
   // Try date-specific key first
   let s=await dbGet('state','day_'+dt);
-  // Migration: if no date-specific state, check old 'current' format
-  if(!s){const old=await dbGet('state','current');if(old&&old._driver!==undefined&&old._date===dt)s=old}
+  // Migration: if no date-specific state, check old 'current' format (it stored everything under one key)
   if(!s){
-    // Fresh day — clear all working data
+    const old=await dbGet('state','current');
+    if(old&&old._driver!==undefined&&old._date===dt){
+      s=old;
+      // Migrate: save it under the date-specific key so it works going forward
+      await dbPut('state','day_'+dt,old);
+    }
+  }
+  if(!s){
+    // Fresh day — only clear time entries and staff, NOT individuals
     $('driverName').value='';
     LOCS.forEach(l=>{
       pTimes[l.id]={};
-      individuals[l.id].forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
+      (individuals[l.id]||[]).forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
       sRows[l.id]=[];sIdC[l.id]=1;
     });
     return;
   }
-  if(s._driver)$('driverName').value=s._driver;
-  LOCS.forEach(l=>{if(s[l.id]){pTimes[l.id]=s[l.id].pTimes||{};sRows[l.id]=s[l.id].sRows||[];sIdC[l.id]=s[l.id].sIdC||1;
-  // Migrate old format
-  Object.keys(pTimes[l.id]||{}).forEach(k=>{const pt=pTimes[l.id][k];if(pt.signedIn===undefined){pt.signedIn=!!(pt.timeIn);pt.fullyLocked=!!(pt.locked);delete pt.locked}});
-  (sRows[l.id]||[]).forEach(r=>{if(r.signedIn===undefined){r.signedIn=!!(r.timeIn);r.fullyLocked=!!(r.locked);delete r.locked;if(r.lastName){r.name=(r.name+' '+(r.lastName||'')).trim();delete r.lastName}}})}else{
-    pTimes[l.id]={};individuals[l.id].forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
+  if(s._driver!==undefined)$('driverName').value=s._driver||'';
+  LOCS.forEach(l=>{
+    // Reset times for this location first
+    pTimes[l.id]={};
+    (individuals[l.id]||[]).forEach((_,i)=>{pTimes[l.id][i]={timeIn:'',timeOut:'',signedIn:false,fullyLocked:false}});
     sRows[l.id]=[];sIdC[l.id]=1;
-  }});
+    // Then overlay saved data if it exists
+    if(s[l.id]){
+      const saved=s[l.id];
+      if(saved.pTimes){
+        Object.keys(saved.pTimes).forEach(k=>{
+          const pt=saved.pTimes[k];
+          if(pt.signedIn===undefined){pt.signedIn=!!(pt.timeIn);pt.fullyLocked=!!(pt.locked);delete pt.locked}
+          pTimes[l.id][k]=pt;
+        });
+      }
+      if(saved.sRows){
+        sRows[l.id]=saved.sRows;
+        sRows[l.id].forEach(r=>{if(r.signedIn===undefined){r.signedIn=!!(r.timeIn);r.fullyLocked=!!(r.locked);delete r.locked;if(r.lastName){r.name=(r.name+' '+(r.lastName||'')).trim();delete r.lastName}}});
+      }
+      if(saved.sIdC)sIdC[l.id]=saved.sIdC;
+    }
+  });
 }
 // ================================================================
 // INDIVIDUALS PERSISTENCE
