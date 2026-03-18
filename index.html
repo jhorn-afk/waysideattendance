@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4.2</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.4.3</span>
     </div>
   </div>
 </div>
@@ -1117,8 +1117,6 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
     <div class="left"><h1>${d.locationName}</h1><h2>Daily Attendance Report</h2></div>
     <div class="right">
       <div><span class="lbl">Date:</span> ${fD(d.date)}</div>
-      <div><span class="lbl">Driver:</span> ${d.driver||'—'}</div>
-      <div><span class="lbl">Generated:</span> ${generated}</div>
     </div>
   </div>
   <div class="sec-hdr">Participant Arrival / Departure Log<span class="cnt">${(d.participants||[]).length} Participants</span></div>
