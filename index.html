@@ -231,7 +231,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
     <div class="header-loc" id="locTitle">Pathways Westlake <small>Attendance Log</small></div>
     <div style="text-align:right">
       <span class="header-save" id="autoSave">☁ Cloud Sync</span>
-      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.6.2</span>
+      <span style="display:block;font-size:.58rem;opacity:.5;color:#fff">v2.7</span>
     </div>
   </div>
 </div>
@@ -1203,10 +1203,36 @@ $('logDate').addEventListener('change',async e=>{
   await loadDateState(newDate);
   qgeSel.clear();
   rebuildAll();
+  resetInactivityTimer();
   toast('Switched to '+fD(newDate));
 });
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 $('admEmail').addEventListener('change',e=>saveSetting({email:e.target.value}));
+
+// Auto-return to today's date after 60 seconds of inactivity
+let inactivityTimer=null;
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  const today=todayISO();
+  if($('logDate').value!==today){
+    inactivityTimer=setTimeout(async()=>{
+      const today=todayISO();
+      if($('logDate').value!==today){
+        $('logDate').value=today;
+        $('sDate').value=today;
+        await dbPut('state','current',{_date:today});
+        if(typeof syncToDate==='function')syncToDate(today);
+        await loadDateState(today);
+        qgeSel.clear();
+        rebuildAll();
+        toast('Returned to today');
+      }
+    },60000);
+  }
+}
+['click','touchstart','keydown','scroll','input'].forEach(evt=>{
+  document.addEventListener(evt,resetInactivityTimer,{passive:true});
+});
 
 // Live clock — updates every second, auto-rolls to new day at midnight
 let lastClockDate='';
